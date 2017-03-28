@@ -39,6 +39,7 @@ def structure():
         Optional('unit_count'): Coerce(int),
         Optional('use_age'): Boolean(),
         Optional('value'): Any(int, float, str, unicode, bool),
+        Optional('regex_pattern'): Any(str, unicode),
     }
     retval.update(filtertype())
     return Schema(retval)

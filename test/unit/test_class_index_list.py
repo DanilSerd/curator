@@ -249,6 +249,59 @@ class TestIndexListFilterByAge(TestCase):
             il.filter_by_age,
             source='name', unit='days', unit_count=1, direction='older'
         )
+    def test_older_then_now_regex_no_match_exclude(self):
+        client = Mock()
+        client.info.return_value = {'version': {'number': '2.4.1'} }
+        client.indices.get_settings.return_value = testvars.settings_two
+        client.cluster.state.return_value = testvars.clu_state_two
+        client.indices.stats.return_value = testvars.stats_two
+        il = curator.IndexList(client)
+        il.filter_by_age(source='name', direction='older',
+            timestring='%Y.%m.%d', unit='days', unit_count=1, exclude=True, regex_pattern='^not-test-index.*$'
+        )
+        self.assertEqual(
+            ['index-2016.03.03', 'index-2016.03.04'], sorted(il.indices)
+        )
+    def test_older_then_now_regex_match_exclude(self):
+        client = Mock()
+        client.info.return_value = {'version': {'number': '2.4.1'} }
+        client.indices.get_settings.return_value = testvars.settings_two
+        client.cluster.state.return_value = testvars.clu_state_two
+        client.indices.stats.return_value = testvars.stats_two
+        il = curator.IndexList(client)
+        il.filter_by_age(source='name', direction='older',
+            timestring='%Y.%m.%d', unit='days', unit_count=1, exclude=True, regex_pattern='^index-2016\.03\.04$'
+        )
+        self.assertEqual(
+            ['index-2016.03.03'], sorted(il.indices)
+        )
+    def test_younger_then_now_regex_match_exclude(self):
+        client = Mock()
+        client.info.return_value = {'version': {'number': '2.4.1'} }
+        client.indices.get_settings.return_value = testvars.settings_two
+        client.cluster.state.return_value = testvars.clu_state_two
+        client.indices.stats.return_value = testvars.stats_two
+        il = curator.IndexList(client)
+        il.filter_by_age(source='name', direction='younger',
+            timestring='%Y.%m.%d', unit='days', unit_count=1, exclude=True, regex_pattern='^index-2016\.03\.04$'
+        )
+        self.assertEqual(
+            ['index-2016.03.03', 'index-2016.03.04'], sorted(il.indices)
+        )
+    def test_name_older_than_past_date_regex_match_exclude(self):
+        client = Mock()
+        client.info.return_value = {'version': {'number': '2.4.1'} }
+        client.indices.get_settings.return_value = testvars.settings_two
+        client.cluster.state.return_value = testvars.clu_state_two
+        client.indices.stats.return_value = testvars.stats_two
+        il = curator.IndexList(client)
+        il.filter_by_age(source='name', direction='older',
+            timestring='%Y.%m.%d', unit='days', unit_count=1, exclude=True,
+            regex_pattern='^index-2016\.03\.03$', epoch=1457049601
+        )
+        self.assertEqual(
+            ['index-2016.03.04'], sorted(il.indices)
+        )
     def test_name_older_than_now(self):
         client = Mock()
         client.info.return_value = {'version': {'number': '2.4.1'} }

@@ -118,3 +118,7 @@ def value(**kwargs):
     # setting. There is a separate value option associated with the allocation
     # action, and the allocated filtertype.
     return { Required('value'): Any(str, unicode) }
+
+def regex_pattern(**kwargs):
+    # This setting is only used by age filter
+    return { Optional('regex_pattern'): Any(str, unicode) }

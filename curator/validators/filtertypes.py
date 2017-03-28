@@ -50,6 +50,7 @@ def age(action, config):
         filter_elements.unit_count(),
         filter_elements.epoch(),
         filter_elements.exclude(),
+        filter_elements.regex_pattern()
     ]
     retval += _age_elements(action, config)
     return retval

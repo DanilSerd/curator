@@ -389,8 +389,7 @@ class IndexList(object):
 
     def filter_by_age(self, source='name', direction=None, timestring=None,
         unit=None, unit_count=None, field=None, stats_result='min_value',
-        epoch=None, exclude=False,
-        ):
+        epoch=None, exclude=False, regex_pattern=None):
         """
         Match `indices` by relative age calculations.
 
@@ -430,6 +429,10 @@ class IndexList(object):
             source=source, timestring=timestring, field=field,
             stats_result=stats_result
         )
+
+        regex = settings.regex_map()['regex'].format(regex_pattern)
+        pattern = re.compile(regex)
+
         for index in self.working_list():
             try:
                 msg = (
@@ -447,7 +450,9 @@ class IndexList(object):
                     agetest = self.index_info[index]['age'][self.age_keyfield] < PoR
                 else:
                     agetest = self.index_info[index]['age'][self.age_keyfield] > PoR
-                self.__excludify(agetest, exclude, index, msg)
+
+                match = agetest and (pattern.match(index) is not None if regex_pattern else True)
+                self.__excludify(match, exclude, index, msg)
             except KeyError:
                 self.loggit.debug(
                     'Index "{0}" does not meet provided criteria. '

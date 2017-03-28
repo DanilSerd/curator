@@ -46,6 +46,77 @@ class TestCLIDeleteIndices(CuratorTestCase):
                     ],
                     )
         self.assertEquals(5, len(curator.get_indices(self.client)))
+
+    def test_name_older_than_now_and_regex_matches(self):
+        self.create_indices(10)
+        self.args['prefix'] = 'regextest-'
+        self.create_indices(10)
+        self.write_config(
+            self.args['configfile'], testvars.client_config.format(host, port))
+
+        self.write_config(self.args['actionfile'],
+            testvars.delete_proto_regex.format(
+                'age', 'name', 'older', '\'%Y.%m.%d\'', 'days', 5, ' ', ' ', ' ', '^regextest-.*$'
+            )
+        )
+        test = clicktest.CliRunner()
+        result = test.invoke(
+                    curator.cli,
+                    [
+                        '--config', self.args['configfile'],
+                        self.args['actionfile']
+                    ],
+                    )
+        indices = curator.get_indices(self.client)
+        self.assertEqual(10, len([i for i in indices if 'logstash' in i]))
+        self.assertEqual(5, len([i for i in indices if 'regextest' in i]))
+
+    def test_name_older_than_now_and_regex_no_match(self):
+        self.create_indices(10)
+        self.args['prefix'] = 'regextest-'
+        self.create_indices(10)
+        self.write_config(
+            self.args['configfile'], testvars.client_config.format(host, port))
+
+        self.write_config(self.args['actionfile'],
+            testvars.delete_proto_regex.format(
+                'age', 'name', 'older', '\'%Y.%m.%d\'', 'days', 5, ' ', ' ', ' ', '^nomatch-.*$'
+            )
+        )
+        test = clicktest.CliRunner()
+        result = test.invoke(
+                    curator.cli,
+                    [
+                        '--config', self.args['configfile'],
+                        self.args['actionfile']
+                    ],
+                    )
+        indices = curator.get_indices(self.client)
+        self.assertEqual(20, len(indices))
+
+    def test_name_older_than_now_and_regex_empty(self):
+        self.create_indices(10)
+        self.args['prefix'] = 'regextest-'
+        self.create_indices(10)
+        self.write_config(
+            self.args['configfile'], testvars.client_config.format(host, port))
+
+        self.write_config(self.args['actionfile'],
+            testvars.delete_proto_regex.format(
+                'age', 'name', 'older', '\'%Y.%m.%d\'', 'days', 5, ' ', ' ', ' ', ' '
+            )
+        )
+        test = clicktest.CliRunner()
+        result = test.invoke(
+                    curator.cli,
+                    [
+                        '--config', self.args['configfile'],
+                        self.args['actionfile']
+                    ],
+                    )
+        indices = curator.get_indices(self.client)
+        self.assertEqual(10, len(indices))
+
     def test_creation_date_newer_than_epoch(self):
         self.create_indices(10)
         self.write_config(
